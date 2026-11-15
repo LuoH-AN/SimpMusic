@@ -1,4 +1,4 @@
-name: Build playback stability fix APK
+name: Build playback fix Release APK
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Configure Full test build
+      - name: Configure Full Release build
         env:
           TEST_KEYSTORE: ${{ secrets.PLAYBACK_TEST_KEYSTORE }}
         run: |
@@ -38,25 +38,35 @@ jobs:
           test -n "$TEST_KEYSTORE"
           printf '%s' "$TEST_KEYSTORE" | base64 --decode > "$HOME/.android/debug.keystore"
           chmod 600 "$HOME/.android/debug.keystore"
-          # Preserve the first test app, whose runner-generated signing key was not retained.
-          # This package uses a persistent key so subsequent test builds can update in place.
-          sed -i 's/applicationIdSuffix = ".dev"/applicationIdSuffix = ".dev.stability"/; s/versionNameSuffix = "-dev"/versionNameSuffix = "-stability-test"/' androidApp/build.gradle.kts
-          sed -i 's/android:label="@string\/app_name"/android:label="SimpMusic 测试2"/' androidApp/src/main/AndroidManifest.xml
+          # Keep the package and certificate of test 2 so Release updates it without data loss.
+          # This is a fork Release APK; it does not use the upstream maintainer's certificate.
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('androidApp/build.gradle.kts')
+          s = p.read_text().replace('val abis = arrayOf("armeabi-v7a", "arm64-v8a", "x86_64")', 'val abis = arrayOf("arm64-v8a")')
+          s = s.replace('        release {\n', '        release {\n            applicationIdSuffix = ".dev.stability"\n            versionNameSuffix = "-playback-fix"\n            signingConfig = signingConfigs.getByName("debug")\n', 1)
+          p.write_text(s)
+          PY
+          sed -i 's/android:label="@string\/app_name"/android:label="SimpMusic 修复版"/' androidApp/src/main/AndroidManifest.xml
           sed -i '/abiFilters.add("x86_64")/d; /abiFilters.add("armeabi-v7a")/d' androidApp/build.gradle.kts
 
       - name: Build installable APK
-        run: ./gradlew :androidApp:assembleDebug -PisFullBuild=true --parallel --build-cache --stacktrace
+        run: ./gradlew :androidApp:assembleRelease -PisFullBuild=true --parallel --build-cache --stacktrace
 
       - name: Stage APK
         run: |
           mkdir -p dist
-          apk_path="$(find androidApp/build/outputs/apk/debug -name '*arm64-v8a*.apk' -print -quit)"
+          apk_path="$(find androidApp/build/outputs/apk/release -name '*arm64-v8a*.apk' -print -quit)"
           test -n "$apk_path"
-          cp "$apk_path" dist/SimpMusic-2.6.0-stream-fix-v3.apk
+          cp "$apk_path" dist/SimpMusic-2.6.0-playback-fix-release.apk
+          build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$build_tools_dir/apksigner" verify --verbose dist/SimpMusic-2.6.0-playback-fix-release.apk
+          "$build_tools_dir/aapt2" dump badging dist/SimpMusic-2.6.0-playback-fix-release.apk > dist/apk-info.txt
+          head -n 5 dist/apk-info.txt
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SimpMusic-2.6.0-stream-fix-v3
-          path: dist/SimpMusic-2.6.0-stream-fix-v3.apk
+          name: SimpMusic-2.6.0-playback-fix-release
+          path: dist/SimpMusic-2.6.0-playback-fix-release.apk
           compression-level: 0
           if-no-files-found: error
