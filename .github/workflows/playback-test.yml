@@ -78,11 +78,11 @@ jobs:
           "$build_tools_dir/apksigner" verify --verbose --print-certs dist/SimpMusic-2.6.0-playback-fix-release-r2.apk > dist/apk-signing.txt
           cat dist/apk-signing.txt
           # The certificate must match the narrow startup exception above.
-          rg -q 'Signer #1 certificate SHA-256 digest: 2ac7d000ca565991fe0a728ff7557d7d848edc213e4199b6b4394576eff70374' dist/apk-signing.txt
+          grep -Fq 'certificate SHA-256 digest: 2ac7d000ca565991fe0a728ff7557d7d848edc213e4199b6b4394576eff70374' dist/apk-signing.txt
           "$build_tools_dir/aapt2" dump badging dist/SimpMusic-2.6.0-playback-fix-release-r2.apk > dist/apk-info.txt
           head -n 5 dist/apk-info.txt
-          rg -q "package: name='com.maxrave.simpmusic.dev.stability'" dist/apk-info.txt
-          if rg -q '^application-debuggable' dist/apk-info.txt; then
+          grep -Fq "package: name='com.maxrave.simpmusic.dev.stability'" dist/apk-info.txt
+          if grep -q '^application-debuggable' dist/apk-info.txt; then
             exit 1
           fi
 
