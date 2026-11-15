@@ -44,7 +44,7 @@ jobs:
           from pathlib import Path
           p = Path('androidApp/build.gradle.kts')
           s = p.read_text().replace('val abis = arrayOf("armeabi-v7a", "arm64-v8a", "x86_64")', 'val abis = arrayOf("arm64-v8a")')
-          s = s.replace('        release {\n', '        release {\n            applicationIdSuffix = ".dev.stability"\n            versionNameSuffix = "-playback-fix-zh-r3"\n            signingConfig = signingConfigs.getByName("debug")\n', 1)
+          s = s.replace('        release {\n', '        release {\n            applicationIdSuffix = ".dev.stability"\n            versionNameSuffix = "-playback-fix-zh-r4"\n            signingConfig = signingConfigs.getByName("debug")\n', 1)
           p.write_text(s)
           # Authorize only this user-owned fork package and its retained certificate.
           # Applied in fork CI; upstream source and the playback PR keep their existing checks.
@@ -73,13 +73,13 @@ jobs:
           mkdir -p dist
           apk_path="$(find androidApp/build/outputs/apk/release -name '*arm64-v8a*.apk' -print -quit)"
           test -n "$apk_path"
-          cp "$apk_path" dist/SimpMusic-2.6.0-chinese-release-r3.apk
+          cp "$apk_path" dist/SimpMusic-2.6.0-chinese-release-r4.apk
           build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          "$build_tools_dir/apksigner" verify --verbose --print-certs dist/SimpMusic-2.6.0-chinese-release-r3.apk > dist/apk-signing.txt
+          "$build_tools_dir/apksigner" verify --verbose --print-certs dist/SimpMusic-2.6.0-chinese-release-r4.apk > dist/apk-signing.txt
           cat dist/apk-signing.txt
           # The certificate must match the narrow startup exception above.
           grep -Fq 'certificate SHA-256 digest: 2ac7d000ca565991fe0a728ff7557d7d848edc213e4199b6b4394576eff70374' dist/apk-signing.txt
-          "$build_tools_dir/aapt2" dump badging dist/SimpMusic-2.6.0-chinese-release-r3.apk > dist/apk-info.txt
+          "$build_tools_dir/aapt2" dump badging dist/SimpMusic-2.6.0-chinese-release-r4.apk > dist/apk-info.txt
           head -n 5 dist/apk-info.txt
           grep -Fq "package: name='com.maxrave.simpmusic.dev.stability'" dist/apk-info.txt
           if grep -q '^application-debuggable' dist/apk-info.txt; then
@@ -88,7 +88,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SimpMusic-2.6.0-chinese-release-r3
-          path: dist/SimpMusic-2.6.0-chinese-release-r3.apk
+          name: SimpMusic-2.6.0-chinese-release-r4
+          path: dist/SimpMusic-2.6.0-chinese-release-r4.apk
           compression-level: 0
           if-no-files-found: error
