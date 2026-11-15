@@ -1,8 +1,8 @@
-name: Build playback login fix APK
+name: Build playback stability fix APK
 
 on:
   push:
-    branches: [fix/youtube-authenticated-playback]
+    branches: [fix/playback-stream-validation]
   workflow_dispatch:
 
 permissions:
@@ -26,12 +26,22 @@ jobs:
           java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
       - name: Configure Full test build
+        env:
+          TEST_KEYSTORE: ${{ secrets.PLAYBACK_TEST_KEYSTORE }}
         run: |
           touch local.properties
-          # Keep only the phone ABI to reduce APK size. Debug is signed automatically
-          # and installs as com.maxrave.simpmusic.dev alongside the official app.
+          mkdir -p "$HOME/.android"
+          test -n "$TEST_KEYSTORE"
+          printf '%s' "$TEST_KEYSTORE" | base64 --decode > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+          # Preserve the first test app, whose runner-generated signing key was not retained.
+          # This package uses a persistent key so subsequent test builds can update in place.
+          sed -i 's/applicationIdSuffix = ".dev"/applicationIdSuffix = ".dev.stability"/; s/versionNameSuffix = "-dev"/versionNameSuffix = "-stability-test"/' androidApp/build.gradle.kts
+          sed -i 's/android:label="@string\/app_name"/android:label="SimpMusic 测试2"/' androidApp/src/main/AndroidManifest.xml
           sed -i '/abiFilters.add("x86_64")/d; /abiFilters.add("armeabi-v7a")/d' androidApp/build.gradle.kts
 
       - name: Build installable APK
@@ -42,11 +52,11 @@ jobs:
           mkdir -p dist
           apk_path="$(find androidApp/build/outputs/apk/debug -name '*arm64-v8a*.apk' -print -quit)"
           test -n "$apk_path"
-          cp "$apk_path" dist/SimpMusic-2.6.0-login-fix.apk
+          cp "$apk_path" dist/SimpMusic-2.6.0-stability-fix.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SimpMusic-2.6.0-login-fix
-          path: dist/SimpMusic-2.6.0-login-fix.apk
+          name: SimpMusic-2.6.0-stability-fix
+          path: dist/SimpMusic-2.6.0-stability-fix.apk
           compression-level: 0
           if-no-files-found: error
