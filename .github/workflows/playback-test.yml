@@ -1,0 +1,50 @@
+name: Build playback login fix APK
+
+on:
+  push:
+    branches: [fix/youtube-authenticated-playback]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fetch patched core
+        run: |
+          git config submodule.core.url https://github.com/LuoH-AN/core.git
+          git submodule update --init --recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure Full test build
+        run: |
+          touch local.properties
+          # Keep only the phone ABI to reduce APK size. Debug is signed automatically
+          # and installs as com.maxrave.simpmusic.dev alongside the official app.
+          sed -i '/abiFilters.add("x86_64")/d; /abiFilters.add("armeabi-v7a")/d' androidApp/build.gradle.kts
+
+      - name: Build installable APK
+        run: ./gradlew :androidApp:assembleDebug -PisFullBuild=true --parallel --stacktrace
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp androidApp/build/outputs/apk/debug/*.apk dist/SimpMusic-2.6.0-login-fix.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SimpMusic-2.6.0-login-fix
+          path: dist/SimpMusic-2.6.0-login-fix.apk
+          compression-level: 0
+          if-no-files-found: error
