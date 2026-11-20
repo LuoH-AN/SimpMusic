@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The original foreground fills 72dp of the 108dp layer and its corners lie outside
+     a circular mask. A proportional inset keeps the entire border inside the 66dp safe
+     circle, at every launcher icon size. The background stays transparent. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_launcher_foreground"
+    android:inset="15%" />

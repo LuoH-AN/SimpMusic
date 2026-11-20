@@ -64,8 +64,7 @@
         </intent>
     </queries>
 
-    <!-- Use the original rounded-square bitmap. Adaptive/round icons let the launcher crop
-         the artwork's border into a circle. -->
+    <!-- The adaptive foreground keeps the complete square artwork inside the mask's safe area. -->
     <application
         android:name=".SimpMusicApplication"
         android:allowBackup="true"
