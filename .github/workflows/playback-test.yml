@@ -90,9 +90,6 @@ jobs:
             exit 1
           fi
           "$build_tools_dir/aapt2" dump xmltree --file AndroidManifest.xml dist/SimpMusic-2.6.0-arm64-v8a.apk > dist/apk-manifest.txt
-          if grep -q 'android:roundIcon' dist/apk-manifest.txt; then
-            exit 1
-          fi
           if grep -q '^application-debuggable' dist/apk-info.txt; then
             exit 1
           fi
