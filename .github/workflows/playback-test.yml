@@ -14,11 +14,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Fetch patched core
-        run: |
-          git config submodule.core.url https://github.com/LuoH-AN/core.git
-          git submodule update --init --recursive
+        with:
+          submodules: recursive
 
       - uses: actions/setup-java@v4
         with:
@@ -71,34 +68,45 @@ jobs:
         run: ./gradlew :androidApp:assembleRelease -PisFullBuild=true --parallel --build-cache --stacktrace
 
       - name: Stage APK
+        id: apk
         run: |
+          version_name="$(sed -n 's/^version-name = "\([^"]*\)"$/\1/p' gradle/libs.versions.toml)"
+          version_code="$(sed -n 's/^version-code = "\([0-9]*\)"$/\1/p' gradle/libs.versions.toml)"
+          test -n "$version_name"
+          test -n "$version_code"
+          artifact_name="SimpMusic-${version_name}-arm64-v8a"
           mkdir -p dist
           apk_path="$(find androidApp/build/outputs/apk/release -name '*arm64-v8a*.apk' -print -quit)"
           test -n "$apk_path"
-          cp "$apk_path" dist/SimpMusic-2.6.0-arm64-v8a.apk
+          apk_file="dist/${artifact_name}.apk"
+          cp "$apk_path" "$apk_file"
           build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          "$build_tools_dir/apksigner" verify --verbose --print-certs dist/SimpMusic-2.6.0-arm64-v8a.apk > dist/apk-signing.txt
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$apk_file" > dist/apk-signing.txt
           cat dist/apk-signing.txt
           # The certificate must match the narrow startup exception above.
           grep -Fq 'certificate SHA-256 digest: 2ac7d000ca565991fe0a728ff7557d7d848edc213e4199b6b4394576eff70374' dist/apk-signing.txt
-          "$build_tools_dir/aapt2" dump badging dist/SimpMusic-2.6.0-arm64-v8a.apk > dist/apk-info.txt
+          "$build_tools_dir/aapt2" dump badging "$apk_file" > dist/apk-info.txt
           head -n 5 dist/apk-info.txt
           grep -Fq "package: name='com.maxrave.simpmusic.dev.stability'" dist/apk-info.txt
-          grep -Fq "versionName='2.6.0'" dist/apk-info.txt
+          grep -Fq "versionName='$version_name'" dist/apk-info.txt
+          grep -Fq "versionCode='$version_code'" dist/apk-info.txt
+          grep -Fxq "native-code: 'arm64-v8a'" dist/apk-info.txt
           grep -Fq "application-label:'SimpMusic'" dist/apk-info.txt
           if grep -Fq '修复版' dist/apk-info.txt; then
             exit 1
           fi
-          "$build_tools_dir/aapt2" dump xmltree --file AndroidManifest.xml dist/SimpMusic-2.6.0-arm64-v8a.apk > dist/apk-manifest.txt
+          "$build_tools_dir/aapt2" dump xmltree --file AndroidManifest.xml "$apk_file" > dist/apk-manifest.txt
           if grep -q '^application-debuggable' dist/apk-info.txt; then
             exit 1
           fi
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+          echo "apk_file=$apk_file" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SimpMusic-2.6.0-arm64-v8a
+          name: ${{ steps.apk.outputs.artifact_name }}
           path: |
-            dist/SimpMusic-2.6.0-arm64-v8a.apk
+            ${{ steps.apk.outputs.apk_file }}
             dist/apk-info.txt
             dist/apk-manifest.txt
             dist/apk-signing.txt

@@ -1158,4 +1158,32 @@
     <string name="introducing_simpmusic_chart">探索 SimpMusic 排行榜</string>
     <string name="lyrics_vote_id">編號：%1$s</string>
     <string name="lyrics_vote_count">票數：%1$s</string>
+
+    <string name="search_settings">搜尋設定</string>
+    <string name="theme_mode_amoled">AMOLED</string>
+    <string name="animated_lyrics_background">動態歌詞背景</string>
+    <string name="animated_lyrics_background_description">封面圖案在歌詞後方緩緩流動</string>
+    <string name="lyrics_background_pulse">隨節奏律動</string>
+    <string name="lyrics_background_pulse_description">背景隨低音起伏</string>
+    <string name="lyrics_background_pulse_needs_animated">請先開啟動態歌詞背景</string>
+    <string name="ai_model_id_required">此供應商要求填寫模型 ID</string>
+    <string name="ai_model_id">模型 ID</string>
+    <string name="search_ai_models">搜尋模型</string>
+    <string name="other_ai_model">其他…</string>
+    <string name="ai_model_list_unavailable">無法載入 %1$s 的模型清單。</string>
+    <string name="back_to_list">返回清單</string>
+    <string name="scroll_long_text">捲動長文字</string>
+    <string name="scroll_long_text_description">過長的標題和名稱會捲動顯示。關閉後將靜止顯示。</string>
+    <string name="create_radio_description">選擇音樂人，依照你的選擇建立電台</string>
+    <string name="delete_lyrics">刪除歌詞</string>
+    <string name="delete_lyrics_confirm">要刪除歌詞嗎？</string>
+    <string name="replay_mix">常聽回顧</string>
+    <string name="replay_mix_subtitle">最近最常聽的歌曲 · 每日更新</string>
+    <string name="app_icon_title">應用程式圖示</string>
+    <string name="app_icon_liquid_glass">液態玻璃</string>
+    <string name="app_icon_old_school">復古</string>
+    <string name="app_icon_minimalism_light">極簡淺色</string>
+    <string name="app_icon_minimalism_dark">極簡深色</string>
+    <string name="app_icon_pixel">像素</string>
+    <string name="app_icon_close_warning">更換應用程式圖示會關閉應用程式，請點選新圖示重新開啟。確定更換嗎？</string>
 </resources>
